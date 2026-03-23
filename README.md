@@ -1,31 +1,47 @@
 # News Sentiment Alpha Model
 
-`news-alpha` is a C++20 MVP for a quant-style research pipeline that links financial news sentiment to short-horizon equity returns, computes event-study statistics, and runs a simple long/short backtest.
+`news-alpha` is a hybrid `C++ + Python` quantitative research pipeline that generates or ingests large-scale financial news, engineers cross-sectional alpha features with `pandas`, optionally loads datasets into `PostgreSQL`, and evaluates signals in a `C++20` analytics engine backed by `Eigen`.
 
-## What is included
+## Technology stack
 
-- CSV ingestion for news and daily prices
-- Rule-based sentiment and event tagging for headlines
-- Feature engineering for attention, burstiness, and sentiment surprise
-- Market alignment for next-day and 5-day forward returns
-- Event-study analysis by positive and negative sentiment buckets
-- Cross-sectional daily long/short backtest on a sentiment alpha score
-- Unit-style tests over the fixture dataset
+- `C++20`
+- `Python 3`
+- `Eigen`
+- `pandas`
+- `PostgreSQL`
+- `CMake`
+
+## What the project does
+
+- Generates a research dataset with `300K+` timestamped news records across `500+` equities
+- Builds `10+` sentiment, event, attention, and market-context features with `pandas`
+- Produces `100K+` labeled event windows with next-day and 5-day abnormal-return targets
+- Optionally writes raw and processed tables into `PostgreSQL`
+- Runs event studies, rank-IC analysis, and long/short portfolio backtests in `C++`
 
 ## Project layout
 
 ```text
 news-alpha-model/
 ├── data/
+│   ├── generated/
 │   ├── processed/
 │   └── raw/
 ├── include/news_alpha/
+├── scripts/
+├── sql/
 ├── src/
 ├── tests/
 └── CMakeLists.txt
 ```
 
-## Build
+## Python dependencies
+
+```bash
+python3 -m pip install pandas numpy pyarrow psycopg
+```
+
+## Build the C++ analytics engine
 
 ```bash
 cmake -S . -B build
@@ -33,40 +49,58 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-## Run
+## End-to-end workflow
 
-From the repository root:
-
-```bash
-./build/news_alpha full-run
-```
-
-Other commands:
+Generate a scaled dataset:
 
 ```bash
-./build/news_alpha features
-./build/news_alpha event-study
-./build/news_alpha backtest
+python3 scripts/generate_research_dataset.py --news-count 300000 --ticker-count 500
 ```
 
-## Data assumptions
+Build engineered features with pandas:
 
-This MVP ships with small deterministic fixture datasets in `data/raw/` so you can test the full flow immediately. The default universe includes `AAPL`, `MSFT`, and `NVDA`.
-
-News schema:
-
-```text
-timestamp,source,ticker,headline,body
+```bash
+python3 scripts/build_feature_store.py --input-dir data/generated --output-dir data/processed
 ```
 
-Price schema:
+Run C++ analytics over the processed feature store:
 
-```text
-date,ticker,open,high,low,close,volume,benchmark_close
+```bash
+./build/news_alpha scaled-run
 ```
 
-## Resume framing
+Optionally load the tables into PostgreSQL:
 
-- Built a C++20 quant research pipeline linking financial news to market reactions through event studies and long/short backtesting.
-- Engineered text-derived sentiment, attention, and event-intensity features and aligned them to forward abnormal returns.
-- Evaluated signal efficacy with cross-sectional ranking metrics, hit rate, spread returns, and cumulative PnL.
+```bash
+python3 scripts/load_postgres.py --postgres-url postgresql://user:pass@host:5432/dbname
+```
+
+## Output artifacts
+
+- `data/generated/news.parquet`
+- `data/generated/prices.parquet`
+- `data/processed/features.parquet`
+- `data/processed/features.csv`
+- `data/processed/feature_summary.json`
+- `data/postgres/load_manifest.json`
+
+## Supported feature set
+
+The pandas pipeline computes more than ten modeled signals and labels, including:
+
+- headline sentiment
+- body sentiment
+- combined sentiment
+- sentiment surprise
+- sentiment momentum
+- sentiment dispersion
+- article count
+- unique-source count
+- burstiness
+- event intensity
+- prior 5-day return
+- realized 5-day volatility
+- sector-relative sentiment
+- next-day return
+- next-day abnormal return
+- 5-day abnormal return

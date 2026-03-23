@@ -4,6 +4,7 @@
 #include "news_alpha/event_study.hpp"
 #include "news_alpha/feature_engineering.hpp"
 #include "news_alpha/reporting.hpp"
+#include "news_alpha/scaled_dataset.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -69,6 +70,15 @@ int main(int argc, char** argv) {
             std::cout << "Generated data/processed/features.csv\n\n";
             std::cout << event_report << "\n";
             std::cout << backtest_report;
+            return 0;
+        }
+
+        if (command == "scaled-run") {
+            const auto rows = news_alpha::load_scaled_features(data_path("processed/features.csv"));
+            const auto summary = news_alpha::run_scaled_analytics(rows);
+            const auto report = news_alpha::render_scaled_summary(summary);
+            news_alpha::write_text_file(data_path("processed/scaled_summary.txt"), report);
+            std::cout << report;
             return 0;
         }
 

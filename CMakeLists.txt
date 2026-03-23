@@ -7,6 +7,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(NEWS_ALPHA_BUILD_TESTS "Build News Alpha tests" ON)
 
+find_path(EIGEN3_INCLUDE_DIR Eigen/Dense
+    PATHS
+        /opt/homebrew/opt/eigen/include/eigen3
+        /usr/local/include/eigen3
+        /opt/miniconda3/include/eigen3
+)
+
+if(NOT EIGEN3_INCLUDE_DIR)
+    message(FATAL_ERROR "Eigen headers not found. Install eigen or update EIGEN3_INCLUDE_DIR.")
+endif()
+
 add_library(news_alpha_lib
     src/csv_reader.cpp
     src/data_loader.cpp
@@ -14,9 +25,11 @@ add_library(news_alpha_lib
     src/event_study.cpp
     src/backtest.cpp
     src/reporting.cpp
+    src/scaled_dataset.cpp
 )
 
 target_include_directories(news_alpha_lib PUBLIC include)
+target_include_directories(news_alpha_lib SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})
 
 add_executable(news_alpha src/main.cpp)
 target_link_libraries(news_alpha PRIVATE news_alpha_lib)

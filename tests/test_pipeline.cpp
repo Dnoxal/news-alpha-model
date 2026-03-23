@@ -2,6 +2,7 @@
 #include "news_alpha/data_loader.hpp"
 #include "news_alpha/event_study.hpp"
 #include "news_alpha/feature_engineering.hpp"
+#include "news_alpha/scaled_dataset.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -29,6 +30,7 @@ int main() {
         const auto features = news_alpha::build_feature_rows(news, prices);
         const auto event_buckets = news_alpha::run_event_study(features);
         const auto summary = news_alpha::run_backtest(features);
+        const auto rendered = news_alpha::render_scaled_summary(news_alpha::EigenAnalyticsSummary {});
 
         assert_true(news.size() == 12, "Expected 12 fixture news rows");
         assert_true(prices.size() == 27, "Expected 27 fixture price rows");
@@ -37,6 +39,7 @@ int main() {
         assert_true(!summary.daily_returns.empty(), "Expected backtest to produce daily returns");
         assert_true(summary.win_rate >= 0.0 && summary.win_rate <= 1.0, "Win rate must be bounded");
         assert_true(std::isfinite(summary.cumulative_return), "Cumulative return should be finite");
+        assert_true(!rendered.empty(), "Scaled summary renderer should produce output");
 
         bool found_positive = false;
         bool found_negative = false;

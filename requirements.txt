@@ -1,0 +1,4 @@
+pandas>=2.2
+numpy>=1.26
+pyarrow>=23.0
+psycopg[binary]>=3.3

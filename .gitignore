@@ -1,2 +1,5 @@
 build/
 data/processed/
+data/generated/
+data/postgres/
+.venv/
